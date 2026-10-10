@@ -3,19 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import {
-  BookOpen,
-  Bot,
-  LayoutDashboard,
-  KeyRound,
-  ScrollText,
-  Search,
-  Settings,
-  TrendingUp,
-  Waypoints,
-  PanelLeftIcon,
-  CornerDownLeft,
-} from "lucide-react";
+import { Search, Waypoints, CornerDownLeft } from "lucide-react";
 import {
   SidebarProvider,
   Sidebar,
@@ -40,41 +28,11 @@ import {
   CommandSeparator,
 } from "@/components/ui/command";
 import { Kbd } from "@/components/ui/kbd";
-
-const NAV_ITEMS = [
-  {
-    label: "RAG 管理",
-    href: "/rag",
-    match: "/rag",
-    icon: BookOpen,
-    children: [{ label: "知识库", href: "/rag", icon: BookOpen, description: "文档上传 · 分段 · 检索测试" }],
-  },
-  {
-    label: "Agent 管理",
-    href: "/agents",
-    match: "/agents",
-    icon: Bot,
-    children: [{ label: "Agent 列表", href: "/agents", icon: Bot, description: "编排 · 调试 · 发布" }],
-  },
-  {
-    label: "LLM 网关管理",
-    href: "/gateway/dashboard",
-    match: "/gateway",
-    icon: Waypoints,
-    children: [
-      { label: "仪表盘", href: "/gateway/dashboard", icon: LayoutDashboard, description: "请求 · Token · 延迟总览" },
-      { label: "用量", href: "/gateway/usage", icon: TrendingUp, description: "按渠道与模型分析消耗" },
-      { label: "渠道", href: "/gateway/channels", icon: PanelLeftIcon, description: "上游 LLM 服务接入" },
-      { label: "密钥", href: "/gateway/keys", icon: KeyRound, description: "API Key 与配额" },
-      { label: "日志", href: "/gateway/logs", icon: ScrollText, description: "请求日志检索" },
-      { label: "设置", href: "/gateway/settings", icon: Settings, description: "服务 · 界面 · 重试策略" },
-    ],
-  },
-] as const;
-
-function isActive(pathname: string, match: string): boolean {
-  return pathname === match || pathname.startsWith(`${match}/`);
-}
+import {
+  NAV_ITEMS,
+  OPEN_SEARCH_EVENT,
+  isActive,
+} from "@/components/layout/nav-config";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -127,9 +85,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** 顶部一级菜单 + 大搜索框 */
+/** 顶部一级菜单 + 大搜索框 + 全局命令面板 */
 function TopNav() {
-  const pathname = usePathname();
   const router = useRouter();
   const { isMobile } = useSidebar();
   const [searchOpen, setSearchOpen] = React.useState(false);
@@ -142,6 +99,7 @@ function TopNav() {
     }
   }, [isMobile]);
 
+  // ⌘K 切换；首页搜索框通过自定义事件打开同一面板
   React.useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
@@ -149,8 +107,13 @@ function TopNav() {
         setSearchOpen((open) => !open);
       }
     };
+    const openEvent = () => setSearchOpen(true);
     document.addEventListener("keydown", down);
-    return () => document.removeEventListener("keydown", down);
+    document.addEventListener(OPEN_SEARCH_EVENT, openEvent);
+    return () => {
+      document.removeEventListener("keydown", down);
+      document.removeEventListener(OPEN_SEARCH_EVENT, openEvent);
+    };
   }, []);
 
   const goto = (href: string) => {
@@ -162,7 +125,7 @@ function TopNav() {
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 backdrop-blur">
       <SidebarTrigger className="transition-transform duration-200 active:scale-90" />
 
-      {/* 大屏大搜索框（参考 Cloudflare ⌘K 样式） */}
+      {/* 大屏大搜索框 */}
       <button
         onClick={() => setSearchOpen(true)}
         className="group mx-auto hidden h-9 w-full max-w-md items-center gap-2 rounded-full border bg-muted/50 px-4 text-sm text-muted-foreground transition-all duration-200 hover:border-ring hover:bg-muted hover:shadow-sm sm:flex"
@@ -177,22 +140,9 @@ function TopNav() {
 
       {/* 一级菜单置顶 */}
       <nav className="ml-auto flex items-center gap-1 px-2 sm:ml-0">
-        {NAV_ITEMS.map((item) => {
-          const active = isActive(pathname, item.match);
-          return (
-            <Link
-              key={item.label}
-              href={item.href}
-              className={`relative rounded-full px-3 py-1.5 text-sm transition-all duration-200 active:scale-95 ${
-                active
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-              }`}
-            >
-              {item.label}
-            </Link>
-          );
-        })}
+        {NAV_ITEMS.map((item) => (
+          <TopNavItem key={item.label} href={item.href} label={item.label} match={item.match} />
+        ))}
       </nav>
 
       <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
@@ -207,7 +157,6 @@ function TopNav() {
                     key={child.href}
                     value={`${item.label} ${child.label} ${child.description}`}
                     onSelect={() => goto(child.href)}
-                    className="[&_[cmdk-item]]:transition-colors"
                   >
                     <child.icon className="size-4" />
                     <div className="flex flex-col">
@@ -235,5 +184,29 @@ function TopNav() {
         </div>
       </CommandDialog>
     </header>
+  );
+}
+
+function TopNavItem({
+  href,
+  label,
+  match,
+}: {
+  href: string;
+  label: string;
+  match: string;
+}) {
+  const active = isActive(usePathname(), match);
+  return (
+    <Link
+      href={href}
+      className={`relative rounded-full px-3 py-1.5 text-sm transition-all duration-200 active:scale-95 ${
+        active
+          ? "bg-primary text-primary-foreground shadow-sm"
+          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+      }`}
+    >
+      {label}
+    </Link>
   );
 }
