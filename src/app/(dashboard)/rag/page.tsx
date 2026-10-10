@@ -246,45 +246,48 @@ function KnowledgeCard({
         checked ? "border-primary ring-1 ring-primary" : ""
       }`}
     >
-      {/* 头部：大头像 + 标题/徽章 */}
-      <div className="flex items-start gap-3.5 p-5 pb-3">
-        <KbAvatar icon={kb.icon} className="size-12 text-2xl" rounded="rounded-xl" />
-        <div className="min-w-0 flex-1">
-          <Link
-            href={`/rag/${kb.id}`}
-            className="block truncate text-base font-semibold leading-tight hover:underline"
-          >
-            {kb.name}
-          </Link>
-          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-            {kb.published && (
-              <Badge className="border-transparent bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
-                已发布
+      {/* 主体：点击任意处切换勾选（名称链接除外，stopPropagation 保持跳详情） */}
+      <div className="flex-1 cursor-pointer select-none" onClick={onToggleCheck}>
+        <div className="flex items-start gap-3.5 p-5 pb-3">
+          <KbAvatar icon={kb.icon} className="size-12 text-2xl" rounded="rounded-xl" />
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <Link
+                href={`/rag/${kb.id}`}
+                onClick={(e) => e.stopPropagation()}
+                className="block truncate text-base font-semibold leading-tight hover:underline"
+              >
+                {kb.name}
+              </Link>
+              {kb.published && (
+                <Badge className="border-transparent bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
+                  已发布
+                </Badge>
+              )}
+              <Badge variant="outline" className="font-normal text-muted-foreground">
+                {modeLabel}
               </Badge>
-            )}
-            <Badge variant="outline" className="font-normal text-muted-foreground">
-              {modeLabel}
-            </Badge>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* 描述区：固定高度，撑起卡片 */}
-      <Link href={`/rag/${kb.id}`} className="flex-1 px-5 pb-4">
-        <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-muted-foreground">
-          {kb.description || "暂无描述"}
-        </p>
-      </Link>
+        {/* 描述区：固定高度，撑起卡片 */}
+        <div className="px-5 pb-4">
+          <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-muted-foreground">
+            {kb.description || "暂无描述"}
+          </p>
+        </div>
 
-      {/* 统计行 */}
-      <div className="flex items-center gap-4 px-5 pb-3 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <FileText className="size-3.5" /> {kb.docCount} 文档
-        </span>
-        <span className="flex items-center gap-1">
-          <Layers className="size-3.5" /> {kb.chunkCount} 分段
-        </span>
-        <span>{(kb.totalChars / 1000).toFixed(1)}k 字</span>
+        {/* 统计行 */}
+        <div className="flex items-center gap-4 px-5 pb-3 text-xs text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <FileText className="size-3.5" /> {kb.docCount} 文档
+          </span>
+          <span className="flex items-center gap-1">
+            <Layers className="size-3.5" /> {kb.chunkCount} 分段
+          </span>
+          <span>{(kb.totalChars / 1000).toFixed(1)}k 字</span>
+        </div>
       </div>
 
       {/* 操作条：链接/编辑/删除｜召回测试/聊天 + 勾选 */}
