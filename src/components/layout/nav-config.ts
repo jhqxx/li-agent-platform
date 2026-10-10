@@ -62,12 +62,19 @@ export const NAV_ITEMS: readonly NavItem[] = [
   },
 ] as const;
 
-/** 首页「常用子菜单」：网关模块只挑高频项，完整列表仍在侧边栏 */
-export const HOME_EXCLUDED = new Set(["/gateway/usage"]);
+/** 首页「常用子菜单」可排除的路径 */
+export const HOME_EXCLUDED = new Set<string>();
 
 export function isActive(pathname: string, match: string): boolean {
   return pathname === match || pathname.startsWith(`${match}/`);
 }
 
-/** 打开全局搜索命令面板（TopNav 监听此事件） */
+/** 打开全局搜索命令面板（搜索框监听此事件） */
 export const OPEN_SEARCH_EVENT = "liagent:open-search";
+
+/** 当前账户信息（真实系统应来自登录态 / 后端） */
+export const ACCOUNT = {
+  name: "李知",
+  email: "lizhi@example.com",
+  plan: "个人版",
+} as const;
