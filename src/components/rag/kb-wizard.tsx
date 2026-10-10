@@ -123,7 +123,7 @@ export function ModePickerDialog({
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg" showCloseButton>
+      <DialogContent className="sm:max-w-2xl" showCloseButton>
         <DialogHeader>
           <DialogTitle>选择知识库模式</DialogTitle>
           <DialogDescription className="text-center">
@@ -146,8 +146,8 @@ export function ModePickerDialog({
                     <MessagesSquare className="size-7" />
                   )}
                 </div>
-                <div className="text-base font-semibold">{meta.title}</div>
-                <div className="text-sm font-medium text-primary">{meta.sub}</div>
+                <div className="whitespace-nowrap text-base font-semibold">{meta.title}</div>
+                <div className="whitespace-nowrap text-sm font-medium text-primary">{meta.sub}</div>
                 <p className="text-xs leading-relaxed text-muted-foreground">{meta.desc}</p>
                 <div className="flex flex-wrap justify-center gap-1 pt-1">
                   {meta.chips.map((chip) => (
@@ -244,7 +244,7 @@ export function KbWizard({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto" showCloseButton={false}>
+      <DialogContent className="max-h-[90vh] sm:max-w-3xl overflow-y-auto" showCloseButton={false}>
         <DialogHeader>
           <DialogTitle>{isEdit ? "编辑知识库" : "新增知识库"}</DialogTitle>
         </DialogHeader>
@@ -255,7 +255,7 @@ export function KbWizard({
             <button
               key={label}
               onClick={() => goStep(i)}
-              className={`flex flex-1 items-center justify-center gap-2 rounded-md py-2 text-sm transition-colors duration-150 ${
+              className={`flex flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-md py-2 text-sm transition-colors duration-150 ${
                 i === step
                   ? "bg-primary font-medium text-primary-foreground"
                   : "text-muted-foreground hover:text-foreground"
@@ -319,7 +319,7 @@ function Field({
 }) {
   return (
     <div className={`flex items-start gap-3 ${className ?? ""}`}>
-      <Label className="w-24 shrink-0 pt-2 text-sm">
+      <Label className="w-24 shrink-0 pt-2 text-sm whitespace-nowrap">
         {required && <span className="mr-0.5 text-destructive">*</span>}
         {label}
         {hint && <span className="ml-1 text-xs text-muted-foreground">{hint}</span>}

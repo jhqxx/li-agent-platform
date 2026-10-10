@@ -333,7 +333,7 @@ function LinkDialog({ kb, onClose }: { kb: KnowledgeBase | null; onClose: () => 
 
   return (
     <Dialog open={kb !== null} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-xl" showCloseButton>
+      <DialogContent className="sm:max-w-2xl" showCloseButton>
         <DialogHeader>
           <DialogTitle>分享「{kb?.name}」</DialogTitle>
         </DialogHeader>
