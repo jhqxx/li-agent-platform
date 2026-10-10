@@ -347,10 +347,35 @@ function StepBasic({
   set: (patch: Partial<KbDraft>) => void;
   lockedMode: boolean;
 }) {
+  // 头像上传（接口暂无）：前端本地转 dataURL 存入 icon，接口就绪后改传文件、存服务端 URL
+  const [uploadError, setUploadError] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+
+  function onAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    setUploadError(null);
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setUploadError("仅支持图片文件");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      setUploadError("图片不能超过 2MB");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => set({ icon: String(reader.result) });
+    reader.onerror = () => setUploadError("读取图片失败");
+    reader.readAsDataURL(file);
+  }
+
+  const isImageIcon = draft.icon.startsWith("data:") || draft.icon.startsWith("http");
+
   return (
     <div className="space-y-4 py-2">
       <Field required label="头像">
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {EMOJI_CHOICES.map((emoji) => (
             <button
               key={emoji}
@@ -364,7 +389,38 @@ function StepBasic({
               {emoji}
             </button>
           ))}
+          {/* 上传入口 */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            title="上传图片"
+            className={`flex size-11 items-center justify-center rounded-lg border-dashed border text-muted-foreground transition-colors duration-150 hover:bg-accent ${
+              isImageIcon ? "border-primary ring-1 ring-primary" : ""
+            }`}
+          >
+            {isImageIcon ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={draft.icon} alt="已上传头像" className="size-full rounded-lg object-cover" />
+            ) : (
+              <Plus className="size-4" />
+            )}
+          </button>
+          {isImageIcon && (
+            <button
+              onClick={() => set({ icon: EMOJI_CHOICES[0] })}
+              className="text-xs text-muted-foreground hover:text-foreground"
+            >
+              移除
+            </button>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={onAvatarFile}
+          />
         </div>
+        {uploadError && <p className="mt-1.5 text-xs text-destructive">{uploadError}</p>}
       </Field>
       <Field required label="名称">
         <Input

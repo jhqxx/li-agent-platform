@@ -50,7 +50,7 @@ export interface KnowledgeBase {
   id: string;
   name: string;
   description: string;
-  /** emoji 头像 */
+  /** 头像：emoji 或图片 URL/dataURL（上传接口就绪后存服务端 URL） */
   icon: string;
   mode: KbMode;
   /** 欢迎语（聊天页首条消息） */

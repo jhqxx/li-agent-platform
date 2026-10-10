@@ -28,6 +28,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDeleteKnowledgeBase, useKnowledgeBases } from "@/hooks/use-api";
 import { KbWizard, ModePickerDialog } from "@/components/rag/kb-wizard";
+import { KbAvatar } from "@/components/rag/kb-avatar";
 import type { KbMode, KnowledgeBase } from "@/types";
 
 export default function RagPage() {
@@ -196,9 +197,7 @@ function KnowledgeCard({
     >
       {/* 头部：大头像 + 标题/徽章 */}
       <div className="flex items-start gap-3.5 p-5 pb-3">
-        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border bg-background text-2xl">
-          {kb.icon}
-        </span>
+        <KbAvatar icon={kb.icon} className="size-12 text-2xl" rounded="rounded-xl" />
         <div className="min-w-0 flex-1">
           <Link
             href={`/rag/${kb.id}`}

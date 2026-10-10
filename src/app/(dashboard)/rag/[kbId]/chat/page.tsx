@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { KbAvatar } from "@/components/rag/kb-avatar";
 import { api } from "@/lib/api/client";
 import type { ChatMessage, KnowledgeBase } from "@/types";
 
@@ -57,9 +58,7 @@ function ChatArea({ kb }: { kb: KnowledgeBase }) {
     <div className="mx-auto flex h-[calc(100vh-9.5rem)] max-w-3xl flex-col">
       {/* 头部：头像 + 名称 + 模式徽章 */}
       <div className="flex items-center gap-3 rounded-xl border bg-card p-4">
-        <span className="flex size-11 items-center justify-center rounded-xl bg-muted text-2xl">
-          {kb.icon}
-        </span>
+        <KbAvatar icon={kb.icon} className="size-11 text-2xl" rounded="rounded-xl" />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className="truncate font-semibold">{kb.name}</span>
@@ -124,9 +123,7 @@ function Messages({ kb }: { kb: KnowledgeBase }) {
       <div className="mt-4 flex-1 space-y-4 overflow-y-auto rounded-xl border bg-card p-4">
         {/* 首条消息：知识库欢迎语 */}
         <div className="flex gap-2">
-          <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-sm">
-            {kb.icon}
-          </span>
+          <KbAvatar icon={kb.icon} className="mt-0.5 size-7 shrink-0 text-sm" rounded="rounded-full" />
           <div className="max-w-[85%] whitespace-pre-wrap rounded-lg rounded-tl-none bg-muted px-3 py-2 text-sm">
             {kb.welcome}
           </div>
@@ -140,9 +137,7 @@ function Messages({ kb }: { kb: KnowledgeBase }) {
                   <User className="size-4" />
                 </span>
               ) : (
-                <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-full bg-muted text-sm">
-                  {kb.icon}
-                </span>
+                <KbAvatar icon={kb.icon} className="mt-0.5 size-7 shrink-0 text-sm" rounded="rounded-full" />
               )}
               <div
                 className={`max-w-[85%] whitespace-pre-wrap rounded-lg px-3 py-2 text-sm ${
