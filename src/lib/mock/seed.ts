@@ -1,4 +1,5 @@
 import { MODELS_BY_TYPE, nextId, type MockStore } from "./store";
+import { defaultKbExtras } from "./kb-defaults";
 import type {
   Agent,
   ApiKey,
@@ -179,14 +180,33 @@ const SAMPLE_DOC_TEXTS: string[][] = [
 
 function seedKnowledgeBases(store: MockStore): void {
   const kbDefs = [
-    { name: "AI 技术文档库", description: "RAG、Agent、Prompt 工程相关技术资料" },
-    { name: "产品合同库", description: "公司常用合同与法务模板" },
+    {
+      name: "AI 技术文档库",
+      description: "RAG、Agent、Prompt 工程相关技术资料",
+      icon: "📚",
+      mode: "qa" as const,
+      welcome: "你好！我是 AI 技术文档库助手，可以回答 RAG 与 Agent 相关的技术问题。",
+      tags: ["技术", "RAG"],
+    },
+    {
+      name: "产品合同库",
+      description: "公司常用合同与法务模板",
+      icon: "💼",
+      mode: "chat" as const,
+      welcome: "您好，我是合同审查助理，请描述您想了解的合同条款。",
+      tags: ["法务"],
+    },
   ];
   for (const def of kbDefs) {
+    const extras = defaultKbExtras(def.icon, def.mode, def.welcome, def.tags);
     const kb: KnowledgeBase = {
       id: nextId(store, "kb"),
       name: def.name,
       description: def.description,
+      icon: def.icon,
+      mode: def.mode,
+      welcome: def.welcome,
+      ...extras,
       docCount: 0,
       chunkCount: 0,
       totalChars: 0,

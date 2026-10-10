@@ -1,8 +1,9 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, FileText, Search, Upload } from "lucide-react";
+import Link from "next/link";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { ArrowLeft, FileText, MessagesSquare, Search, Upload } from "lucide-react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,9 @@ export default function KbDetailPage() {
   const params = useParams<{ kbId: string }>();
   const kbId = params.kbId;
   const router = useRouter();
+  const searchParams = useSearchParams();
+  // 支持 ?tab=retrieval 深链（卡片「召回测试」入口）
+  const initialTab = searchParams.get("tab") === "retrieval" ? "retrieval" : "documents";
 
   const { data: docs, isLoading } = useKbDocuments(kbId);
   const { data: chunks } = useKbChunks(kbId);
@@ -34,13 +38,18 @@ export default function KbDetailPage() {
         <Button variant="ghost" size="icon" onClick={() => router.push("/rag")}>
           <ArrowLeft className="size-4" />
         </Button>
-        <div>
+        <div className="flex-1">
           <h1 className="text-2xl font-semibold tracking-tight">知识库详情</h1>
           <p className="text-sm text-muted-foreground">管理文档、预览分段、测试检索效果</p>
         </div>
+        <Button variant="outline" asChild>
+          <Link href={`/rag/${kbId}/chat`}>
+            <MessagesSquare className="size-4" /> 去聊天
+          </Link>
+        </Button>
       </div>
 
-      <Tabs defaultValue="documents">
+      <Tabs defaultValue={initialTab}>
         <TabsList>
           <TabsTrigger value="documents">文档</TabsTrigger>
           <TabsTrigger value="chunks">分段预览</TabsTrigger>

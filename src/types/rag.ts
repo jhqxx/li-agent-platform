@@ -1,10 +1,66 @@
 /** 文档处理状态 */
 export type DocStatus = "uploading" | "parsing" | "completed" | "failed";
 
+/** 知识库工作模式：通用 Q2A / 客服 Q2Q（本阶段仅存储与展示） */
+export type KbMode = "qa" | "chat";
+
+/** 高级配置（模型与检索参数，整包存储回显） */
+export interface KbAdvancedConfig {
+  vectorDb: string;
+  embeddingModel: string;
+  summaryModel: string;
+  parseModel: string;
+  rerankModel: string;
+  /** 会话轮数 */
+  sessionRounds: number;
+  /** 匹配条数 */
+  matchCount: number;
+  /** 分片值 */
+  chunkSize: number;
+  /** 匹配率 0~100 */
+  matchRate: number;
+  webSearch: boolean;
+  /** 空提示 */
+  emptyHint: string;
+  /** 处理选项 */
+  docSummary: boolean;
+  sessionCompress: boolean;
+  annotateData: boolean;
+  autoTag: boolean;
+  similarQuestions: boolean;
+  executionTrace: boolean;
+}
+
+/** 安全配置（访问控制暂未开放） */
+export interface KbSecurityConfig {
+  sensitiveFilter: boolean;
+  /** 开启过滤时的提示语（必填） */
+  filterHint: string;
+  /** 底部信息，支持 HTML */
+  footerHtml: string;
+}
+
+/** 语义设置 */
+export interface KbSemanticConfig {
+  tags: string[];
+  synonyms: string;
+}
+
 export interface KnowledgeBase {
   id: string;
   name: string;
   description: string;
+  /** emoji 头像 */
+  icon: string;
+  mode: KbMode;
+  /** 欢迎语（聊天页首条消息） */
+  welcome: string;
+  sortOrder: number;
+  published: boolean;
+  tags: string[];
+  advanced: KbAdvancedConfig;
+  security: KbSecurityConfig;
+  semantics: KbSemanticConfig;
   docCount: number;
   chunkCount: number;
   /** 文档总字数 */
@@ -16,6 +72,14 @@ export interface KnowledgeBase {
 export interface KnowledgeBaseInput {
   name: string;
   description: string;
+  icon: string;
+  mode: KbMode;
+  welcome: string;
+  sortOrder: number;
+  tags: string[];
+  advanced: KbAdvancedConfig;
+  security: KbSecurityConfig;
+  semantics: KbSemanticConfig;
 }
 
 export interface KbDocument {
