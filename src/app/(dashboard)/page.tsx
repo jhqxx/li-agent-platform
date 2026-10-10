@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
   ChevronRight,
@@ -11,6 +12,7 @@ import {
   ArrowUpRight,
   Rocket,
   Plus,
+  CornerDownLeft,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,7 +27,7 @@ import {
 } from "recharts";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/lib/api/client";
-import { NAV_ITEMS, OPEN_SEARCH_EVENT } from "@/components/layout/nav-config";
+import { NAV_ITEMS } from "@/components/layout/nav-config";
 import { useRecentVisits } from "@/hooks/use-recent-visits";
 import type { UsageOverview } from "@/types";
 
@@ -38,7 +40,7 @@ export default function HomePage() {
       <div className="flex justify-center pt-10">
         <Link
           href="/agents"
-          className="group flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm shadow-sm transition-all duration-200 hover:shadow-md"
+          className="group flex items-center gap-2 rounded-full border bg-card px-4 py-2 text-sm shadow-sm transition-[box-shadow,border-color] duration-150 hover:shadow-md"
         >
           <Rocket className="size-4 text-primary" />
           <span>用 Agent 编排你的第一个工作流</span>
@@ -56,19 +58,9 @@ export default function HomePage() {
         </h1>
       </div>
 
-      {/* 大搜索框：打开全局命令面板 */}
-      <div className="flex justify-center">
-        <button
-          onClick={() => document.dispatchEvent(new CustomEvent(OPEN_SEARCH_EVENT))}
-          className="group flex h-12 w-full max-w-2xl items-center gap-3 rounded-2xl border bg-card px-5 text-sm text-muted-foreground shadow-sm transition-all duration-200 hover:border-ring hover:shadow-md"
-        >
-          <Search className="size-4 transition-transform duration-200 group-hover:scale-110" />
-          <span>搜索</span>
-          <span className="ml-auto flex items-center gap-1">
-            <Kbd>⌘</Kbd>
-            <Kbd>K</Kbd>
-          </span>
-        </button>
+      {/* 大搜索框：行内搜索，输入即过滤、回车直达 */}
+      <div className="relative mx-auto w-full max-w-2xl">
+        <HomeSearch />
       </div>
 
       {/* 三列：常用菜单 / 最近访问 / AI 快捷操作 */}
@@ -208,14 +200,14 @@ function MenuRow({
   return (
     <Link
       href={href}
-      className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all duration-200 hover:bg-accent active:scale-[0.99]"
+      className="group flex items-center gap-3 rounded-lg px-3 py-2.5 transition-colors duration-150 hover:bg-accent"
     >
       <span className="text-muted-foreground transition-colors group-hover:text-foreground">{icon}</span>
       <span className="min-w-0 flex-1">
         <span className="block text-sm font-medium">{label}</span>
         <span className="block truncate text-xs text-muted-foreground">{description}</span>
       </span>
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-all duration-200 group-hover:translate-x-0.5 group-hover:text-foreground" />
+      <ChevronRight className="size-4 shrink-0 text-muted-foreground/40 transition-transform duration-150 group-hover:translate-x-0.5" />
     </Link>
   );
 }
@@ -356,5 +348,97 @@ function CurrentTime() {
         {date} · {tz}
       </span>
     </span>
+  );
+}
+
+function HomeSearch() {
+  const router = useRouter();
+  const [query, setQuery] = React.useState("");
+  const [focused, setFocused] = React.useState(false);
+
+  const allItems = React.useMemo(
+    () => NAV_ITEMS.map((item) => item.children.map((child) => ({ ...child, group: item.label }))).flat(),
+    [],
+  );
+
+  const kw = query.trim().toLowerCase();
+  const hits = kw
+    ? allItems.filter((c) => `${c.group} ${c.label} ${c.description}`.toLowerCase().includes(kw))
+    : allItems;
+
+  const open = focused && kw.length > 0;
+
+  function go(href: string) {
+    setQuery("");
+    setFocused(false);
+    router.push(href);
+  }
+
+  return (
+    <>
+      <div className="group flex h-12 items-center gap-3 rounded-2xl border bg-card px-5 shadow-sm transition-[box-shadow,border-color] duration-150 focus-within:border-ring hover:border-ring hover:shadow-md">
+        <Search className="size-4 shrink-0 text-muted-foreground" />
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && hits.length > 0) go(hits[0].href);
+            if (e.key === "Escape") {
+              setQuery("");
+              e.currentTarget.blur();
+            }
+          }}
+          placeholder="搜索菜单，回车直达…"
+          className="h-full w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+        />
+        {query ? (
+          <button
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={() => setQuery("")}
+            className="shrink-0 text-xs text-muted-foreground hover:text-foreground"
+          >
+            清空
+          </button>
+        ) : (
+          <span className="flex shrink-0 items-center gap-1">
+            <Kbd>⌘</Kbd>
+            <Kbd>K</Kbd>
+          </span>
+        )}
+      </div>
+
+      {open && (
+        <div className="absolute inset-x-0 top-full z-30 mt-2 overflow-hidden rounded-xl border bg-popover shadow-lg">
+          {hits.length === 0 ? (
+            <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+              没有匹配「{query}」的菜单
+            </p>
+          ) : (
+            <ul className="max-h-72 overflow-y-auto p-1.5">
+              {hits.map((c) => (
+                <li key={c.href}>
+                  <button
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => go(c.href)}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left transition-colors duration-150 hover:bg-accent"
+                  >
+                    <c.icon className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-medium">{c.label}</span>
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {c.group} · {c.description}
+                      </span>
+                    </span>
+                    <CornerDownLeft className="size-3.5 shrink-0 text-muted-foreground/40" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </>
   );
 }

@@ -311,23 +311,23 @@ function TopBar() {
   const router = useRouter();
   return (
     <header className="sticky top-0 z-20 flex h-14 shrink-0 items-center gap-2 border-b bg-background/80 px-4 backdrop-blur">
-      <SidebarTrigger className="transition-transform duration-200 active:scale-90" />
+      <SidebarTrigger className="transition-colors duration-150" />
       <nav className="ml-auto flex items-center gap-1">
         <button
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground active:scale-95"
+          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-accent-foreground"
           onClick={() => router.push("/agents")}
         >
           <Sparkles className="size-4" /> 询问 AI
         </button>
         <button
-          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-all duration-200 hover:bg-accent hover:text-accent-foreground active:scale-95"
+          className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm text-muted-foreground transition-colors duration-150 hover:bg-accent hover:text-accent-foreground"
           onClick={() => router.push("/account")}
         >
           <LifeBuoy className="size-4" /> 支持
         </button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="ml-1 rounded-full transition-transform duration-200 hover:scale-105 active:scale-95">
+            <button className="ml-1 rounded-full transition-colors duration-150 hover:bg-accent">
               <Avatar className="size-8">
                 <AvatarFallback className="bg-primary text-sm text-primary-foreground">
                   {ACCOUNT.name.slice(0, 1)}
