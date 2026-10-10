@@ -11,7 +11,7 @@ export default function AccountPage() {
   const initial = ACCOUNT.name.slice(0, 1);
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">管理账户</h1>
         <p className="text-sm text-muted-foreground">查看账户信息与登录偏好</p>

@@ -15,6 +15,10 @@ export interface RecentVisit {
   label: string;
   description: string;
   at: number;
+  /** 累计访问次数：排序主键，避免顺序抖动 */
+  visits?: number;
+  /** 最近一次访问时间：排序次键 */
+  lastAt?: number;
 }
 
 function resolveChild(pathname: string): NavChild | null {
@@ -38,35 +42,45 @@ function read(): RecentVisit[] {
   }
 }
 
+/** 写入延迟：用户点击最近访问后，页面跳转瞬间列表不能重排（否则被点项上移导致误触） */
+const WRITE_DELAY_MS = 1500;
+
 /**
  * 记录并读取最近访问的菜单（localStorage，无需后端）。
- * 用 useSyncExternalStore 订阅 localStorage 变化，避免 effect 里直接 setState。
+ * 写入刻意延迟 1.5s：跳转动画期间列表保持稳定，之后才重排。
  */
 export function useRecentVisits(): RecentVisit[] {
   const pathname = usePathname();
   const [version, setVersion] = React.useState(0);
 
-  // 路由变化时写入记录，然后 bump version 触发重读
   React.useEffect(() => {
     if (IGNORED.some((p) => pathname.startsWith(p))) return;
     const child = resolveChild(pathname);
     if (!child) return;
     const id = setTimeout(() => {
       try {
-        const list = read().filter((r) => r.href !== child.href);
-        list.unshift({
+        const list = read();
+        const existing = list.find((r) => r.href === child.href);
+        const rest = list.filter((r) => r.href !== child.href);
+        const updated: RecentVisit = {
           href: child.href,
           label: child.label,
           description: child.description,
-          at: Date.now(),
-        });
-        const trimmed = list.slice(0, MAX_ITEMS);
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+          // 保留首次访问时间作为权重基础，仅刷新展示时间
+          at: existing ? existing.at : Date.now(),
+          visits: (existing?.visits ?? 0) + 1,
+          lastAt: Date.now(),
+        };
+        // 按访问次数优先、最近访问其次排序，顺序稳定不抖动
+        const merged = [updated, ...rest]
+          .sort((a, b) => (b.visits ?? 0) - (a.visits ?? 0) || (b.lastAt ?? 0) - (a.lastAt ?? 0))
+          .slice(0, MAX_ITEMS);
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(merged));
         setVersion((v) => v + 1);
       } catch {
         // localStorage 不可用时静默降级
       }
-    }, 0);
+    }, WRITE_DELAY_MS);
     return () => clearTimeout(id);
   }, [pathname]);
 
