@@ -26,6 +26,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useDeleteKnowledgeBase, useKnowledgeBases } from "@/hooks/use-api";
 import { KbWizard, ModePickerDialog } from "@/components/rag/kb-wizard";
 import { KbAvatar } from "@/components/rag/kb-avatar";
@@ -44,6 +54,10 @@ export default function RagPage() {
   const [linkKb, setLinkKb] = React.useState<KnowledgeBase | null>(null);
   // 勾选（批量删除）
   const [checked, setChecked] = React.useState<Set<string>>(new Set());
+  // 删除确认弹窗：pendingTarget 为 null 时关闭
+  const [pendingDelete, setPendingDelete] = React.useState<
+    { type: "one"; kb: KnowledgeBase } | { type: "batch"; ids: string[] } | null
+  >(null);
 
   function toggleCheck(id: string) {
     setChecked((prev) => {
@@ -55,30 +69,37 @@ export default function RagPage() {
   }
 
   function onDeleteSelected() {
-    const ids = [...checked];
-    if (ids.length === 0) {
+    if (checked.size === 0) {
       toast.error("请先勾选要删除的知识库");
       return;
     }
-    const names = kbs?.filter((k) => ids.includes(k.id)).map((k) => k.name) ?? [];
-    if (!confirm(`确定删除 ${ids.length} 个知识库（${names.join("、")}）？文档与分段将一并删除。`)) {
-      return;
-    }
-    ids.forEach((id) =>
-      deleteKb.mutate(id, {
-        onSuccess: () =>
-          setChecked((prev) => {
-            const next = new Set(prev);
-            next.delete(id);
-            return next;
-          }),
-      }),
-    );
+    setPendingDelete({ type: "batch", ids: [...checked] });
   }
 
   function onDeleteOne(kb: KnowledgeBase) {
-    if (!confirm(`确定删除知识库「${kb.name}」？其中的文档与分段将一并删除。`)) return;
-    deleteKb.mutate(kb.id, { onSuccess: () => toast.success(`已删除「${kb.name}」`) });
+    setPendingDelete({ type: "one", kb });
+  }
+
+  function confirmDelete() {
+    if (!pendingDelete) return;
+    if (pendingDelete.type === "one") {
+      deleteKb.mutate(pendingDelete.kb.id, {
+        onSuccess: () => toast.success(`已删除「${pendingDelete.kb.name}」`),
+      });
+    } else {
+      const ids = pendingDelete.ids;
+      ids.forEach((id) =>
+        deleteKb.mutate(id, {
+          onSuccess: () =>
+            setChecked((prev) => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+            }),
+        }),
+      );
+    }
+    setPendingDelete(null);
   }
 
   return (
@@ -164,6 +185,36 @@ export default function RagPage() {
           }}
         />
       )}
+
+      {/* 删除确认 */}
+      <AlertDialog open={pendingDelete !== null} onOpenChange={(o) => !o && setPendingDelete(null)}>
+        <AlertDialogContent className="sm:max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除知识库</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingDelete?.type === "one" ? (
+                <>
+                  将删除「<span className="font-medium text-foreground">{pendingDelete.kb.name}</span>」，
+                </>
+              ) : (
+                <>
+                  将删除选中的 <span className="font-medium text-foreground">{pendingDelete?.ids.length ?? 0}</span> 个知识库，
+                </>
+              )}
+              其中包含的所有文档与分段会一并删除，此操作不可恢复。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={confirmDelete}
+            >
+              删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <LinkDialog kb={linkKb} onClose={() => setLinkKb(null)} />
     </div>
