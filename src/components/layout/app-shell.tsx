@@ -373,11 +373,14 @@ function RecentVisitsGroup({
   recents: Array<{ href: string; label: string }>;
   pathname: string;
 }) {
+  // 受控开合：用户手动展开才展开，路由变化/数据更新不会自动弹开
+  const [open, setOpen] = React.useState(false);
+
   return (
     <SidebarGroup>
       <SidebarMenu>
         <SidebarMenuItem>
-          <Collapsible defaultOpen className="group/collapsible">
+          <Collapsible open={open} onOpenChange={setOpen}>
             <CollapsibleTrigger asChild>
               <SidebarMenuButton tooltip="最近访问" className="transition-colors duration-200">
                 <History />

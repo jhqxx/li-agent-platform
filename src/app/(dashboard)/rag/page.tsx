@@ -7,6 +7,7 @@ import {
   Check,
   Copy,
   ExternalLink,
+  FileText,
   Layers,
   Link2,
   MessagesSquare,
@@ -168,7 +169,7 @@ export default function RagPage() {
   );
 }
 
-/* ---------------- 卡片（对齐截图 1） ---------------- */
+/* ---------------- 卡片 ---------------- */
 
 function KnowledgeCard({
   kb,
@@ -185,41 +186,60 @@ function KnowledgeCard({
   onEdit: () => void;
   onDelete: () => void;
 }) {
+  const modeLabel = kb.mode === "qa" ? "通用模式" : "客服模式";
+
   return (
     <div
-      className={`relative rounded-xl border bg-card transition-[border-color,box-shadow] duration-150 hover:shadow-md ${
+      className={`group relative flex flex-col rounded-xl border bg-card transition-[border-color,box-shadow] duration-150 hover:shadow-md ${
         checked ? "border-primary ring-1 ring-primary" : ""
       }`}
     >
-      <div className="flex items-start gap-3 p-4 pb-2">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-muted text-xl">
+      {/* 头部：大头像 + 标题/徽章 */}
+      <div className="flex items-start gap-3.5 p-5 pb-3">
+        <span className="flex size-12 shrink-0 items-center justify-center rounded-xl border bg-background text-2xl">
           {kb.icon}
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <Link href={`/rag/${kb.id}`} className="truncate text-sm font-semibold hover:underline">
-              {kb.name}
-            </Link>
+          <Link
+            href={`/rag/${kb.id}`}
+            className="block truncate text-base font-semibold leading-tight hover:underline"
+          >
+            {kb.name}
+          </Link>
+          <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
             {kb.published && (
               <Badge className="border-transparent bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400">
                 已发布
               </Badge>
             )}
-          </div>
-          <div className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-            <Layers className="size-3" /> 文档数：{kb.docCount}
+            <Badge variant="outline" className="font-normal text-muted-foreground">
+              {modeLabel}
+            </Badge>
           </div>
         </div>
       </div>
 
-      <Link href={`/rag/${kb.id}`} className="block px-4 pb-3">
-        <p className="line-clamp-1 text-sm text-muted-foreground">
+      {/* 描述区：固定高度，撑起卡片 */}
+      <Link href={`/rag/${kb.id}`} className="flex-1 px-5 pb-4">
+        <p className="line-clamp-2 min-h-10 text-sm leading-relaxed text-muted-foreground">
           {kb.description || "暂无描述"}
         </p>
       </Link>
 
-      <div className="flex items-center justify-between border-t px-3 py-2">
-        <div className="flex items-center gap-0.5">
+      {/* 统计行 */}
+      <div className="flex items-center gap-4 px-5 pb-3 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1">
+          <FileText className="size-3.5" /> {kb.docCount} 文档
+        </span>
+        <span className="flex items-center gap-1">
+          <Layers className="size-3.5" /> {kb.chunkCount} 分段
+        </span>
+        <span>{(kb.totalChars / 1000).toFixed(1)}k 字</span>
+      </div>
+
+      {/* 操作条：链接/编辑/删除｜召回测试/聊天 + 勾选 */}
+      <div className="flex items-center justify-between border-t px-3 py-1.5">
+        <div className="flex items-center gap-1">
           <IconAction title="链接" onClick={onLink}>
             <Link2 className="size-4" />
           </IconAction>
@@ -229,7 +249,7 @@ function KnowledgeCard({
           <IconAction title="删除" onClick={onDelete}>
             <Trash2 className="size-4" />
           </IconAction>
-          <span className="mx-1 h-4 w-px bg-border" />
+          <span className="mx-1.5 h-4 w-px bg-border" />
           <LinkAction href={`/rag/${kb.id}?tab=retrieval`} title="召回测试">
             <Target className="size-4" />
           </LinkAction>
